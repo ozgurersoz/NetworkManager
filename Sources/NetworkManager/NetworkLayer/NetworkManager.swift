@@ -7,14 +7,14 @@
 
 import Foundation
 
-class NetworkManager {
-    var session: URLSession
+public class NetworkManager {
+    private var session: URLSession
     
-    init(session: URLSession = .shared) {
+    public init(session: URLSession = .shared) {
         self.session = session
     }
     
-    func loadData<ResponseModel: Decodable>(
+    public func loadData<ResponseModel: Decodable>(
         fromRequest urlRequest: APIRequestProtocol,
         responseModel: ResponseModel.Type,
         then handler: @escaping (Result<ResponseModel, NetworkError>) -> Void
@@ -39,7 +39,7 @@ class NetworkManager {
         }
     }
     
-    func decode<T: Decodable>(_ data: Data, to type: T.Type) throws -> T {
+    private func decode<T: Decodable>(_ data: Data, to type: T.Type) throws -> T {
         do {
             let decoder = JSONDecoder()
             let decodedObject = try decoder.decode(type.self, from: data)
@@ -51,7 +51,7 @@ class NetworkManager {
     
 }
 
-enum NetworkError: Error {
+public enum NetworkError: Error {
     case invalidJsonData
     case genericError(_ message: String)
     case invalidURL

@@ -7,14 +7,14 @@
 
 import Foundation
 
-protocol APIRequestProtocol {
+public protocol APIRequestProtocol {
     func request() throws -> URLRequest
     func asURL() -> URL?
 }
 
 public typealias HTTPHeaders = [String: String]
 
-class APIRequest<Configuration: NetworkConfiguration>: APIRequestProtocol {
+public class APIRequest<Configuration: NetworkConfiguration>: APIRequestProtocol {
     
     private let method: HTTPMethod
     private let path: String
@@ -22,7 +22,7 @@ class APIRequest<Configuration: NetworkConfiguration>: APIRequestProtocol {
     private let config = Configuration()
     private let body: Data?
     
-    init(
+    public init(
         method: HTTPMethod,
         path: String,
         parameters: [URLQueryItem]? = nil,
@@ -34,7 +34,7 @@ class APIRequest<Configuration: NetworkConfiguration>: APIRequestProtocol {
         self.body = body
     }
     
-    func request() throws -> URLRequest {
+    public func request() throws -> URLRequest {
         guard let url = asURL() else { throw NetworkError.invalidURL }
         
         var urlRequest = URLRequest(url: url)
@@ -52,7 +52,7 @@ class APIRequest<Configuration: NetworkConfiguration>: APIRequestProtocol {
         return urlRequest
     }
     
-    func asURL() -> URL? {
+    public func asURL() -> URL? {
         var component = URLComponents()
         component.scheme = "https"
         component.host = config.host
@@ -63,7 +63,7 @@ class APIRequest<Configuration: NetworkConfiguration>: APIRequestProtocol {
     }
 }
 
-protocol NetworkConfiguration {
+public protocol NetworkConfiguration {
     static var shared: NetworkConfiguration { get }
     var headers: HTTPHeaders? { get }
     var host: String { get }
