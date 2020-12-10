@@ -7,36 +7,52 @@
 
 import Foundation
 
-public class NetworkManager {
-    private var session: URLSession
+protocol NetworkManagerProtocol {
+    func loadData<ResponseModel: Decodable>(
+        fromRequest urlRequest: APIRequestProtocol,
+        responseModel: ResponseModel.Type,
+        then handler: @escaping (Result<ResponseModel, NetworkError>) -> Void
+    ) -> CancelableRequestProtocol
+}
+
+public class NetworkManager: NetworkManagerProtocol, CancelableRequestProtocol {
+    private var session: URLSessionProtocol
+    private var dataTask: URLSessionDataTask?
     
-    public init(session: URLSession = .shared) {
+    public init(session: URLSessionProtocol = URLSession.shared) {
         self.session = session
     }
     
+    @discardableResult
     public func loadData<ResponseModel: Decodable>(
         fromRequest urlRequest: APIRequestProtocol,
         responseModel: ResponseModel.Type,
         then handler: @escaping (Result<ResponseModel, NetworkError>) -> Void
-    ) {
+    ) -> CancelableRequestProtocol {
         do {
             let request = try urlRequest.request()
             
-            let task = session.dataTask(with: request) { (data, response, error) in
-                if let data = data {
+            let task = session.dataTask(with: request) { (result) in
+                switch result {
+                case .failure(let error):
+                    handler(.failure(.genericError(error.localizedDescription)))
+                case .success((let data, let response)):
                     do {
-                        let user = try self.decode(data, to: ResponseModel.self)
-                        handler(.success(user))
-                    } catch  {
+                        let decodedData = try self.decode(data, to: responseModel.self)
+                        handler(.success(decodedData))
+                    } catch {
                         handler(.failure(.genericError(error.localizedDescription)))
                     }
+                    
                 }
             }
-            
+            self.dataTask = task
             task.resume()
         } catch {
             handler(.failure(.invalidURL))
         }
+        
+        return self
     }
     
     private func decode<T: Decodable>(_ data: Data, to type: T.Type) throws -> T {
@@ -49,6 +65,11 @@ public class NetworkManager {
         }
     }
     
+    public func cancel() {
+        if let dataTask = dataTask {
+            dataTask.cancel()
+        }
+    }
 }
 
 public enum NetworkError: Error {
@@ -57,3 +78,7 @@ public enum NetworkError: Error {
     case invalidURL
 }
 
+
+public protocol CancelableRequestProtocol {
+    func cancel()
+}

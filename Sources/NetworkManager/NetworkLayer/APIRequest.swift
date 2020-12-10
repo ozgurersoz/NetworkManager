@@ -19,7 +19,7 @@ public class APIRequest<Configuration: NetworkConfiguration>: APIRequestProtocol
     private let method: HTTPMethod
     private let path: String
     private let parameters: [URLQueryItem]?
-    private let config = Configuration()
+    private let config = Configuration.shared
     private let body: Data?
     
     public init(
@@ -53,9 +53,7 @@ public class APIRequest<Configuration: NetworkConfiguration>: APIRequestProtocol
     }
     
     public func asURL() -> URL? {
-        var component = URLComponents()
-        component.scheme = "https"
-        component.host = config.host
+        var component = config.urlComponent
         component.path = path
         component.queryItems = parameters
         
@@ -65,7 +63,8 @@ public class APIRequest<Configuration: NetworkConfiguration>: APIRequestProtocol
 
 public protocol NetworkConfiguration {
     static var shared: NetworkConfiguration { get }
+    
     var headers: HTTPHeaders? { get }
-    var host: String { get }
+    var urlComponent: URLComponents { get }
     init()
 }
